@@ -1,6 +1,11 @@
 import { create, find } from '../models/user';
 import db from '../utils/db';
-import {encrypt, decrypt, generateJwtToken} from "../middleware/auth"
+import {
+  encrypt,
+  decrypt,
+  generateJwtToken,
+  createCookie
+} from '../middleware/auth';
 
 const register = async (req, res) => {
   const { email, password } = req.body;
@@ -13,7 +18,9 @@ const login = async (req, res) => {
   const { rows } = await db.query(find(email));
   const user = rows[0];
   if (decrypt(password, user.password)) {
-      const token=generateJwtToken(user)
+    const generatedData = generateJwtToken(user);
+    const { token } = generatedData;
+    createCookie(res, generatedData);
     res.status(200).send({ message: 'login successful!', token });
   }
 };
