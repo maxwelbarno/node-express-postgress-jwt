@@ -2,4 +2,6 @@ const create = (email, password) => `INSERT INTO users(email, password, created_
 
 const find = (email) => `SELECT * FROM users WHERE email='${email}'`;
 
-export { create, find };
+const read = () => 'SELECT * FROM users';
+
+export { create, find, read };

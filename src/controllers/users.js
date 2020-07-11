@@ -1,4 +1,4 @@
-import { create, find } from '../models/user';
+import { create, find, read } from '../models/user';
 import db from '../utils/db';
 import {
   encrypt,
@@ -25,4 +25,9 @@ const login = async (req, res) => {
   }
 };
 
-export { register, login };
+const displayUsers = async (req, res) => {
+  const { rows } = await db.query(read());
+  res.status(200).send({ users: rows });
+};
+
+export { register, login, displayUsers };
