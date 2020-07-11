@@ -30,4 +30,11 @@ const displayUsers = async (req, res) => {
   res.status(200).send({ users: rows });
 };
 
-export { register, login, displayUsers };
+const logout = (req, res) => {
+  res.clearCookie('token');
+  res.status(200).send({ message: 'logout successful!' });
+};
+
+export {
+  register, login, displayUsers, logout
+};
