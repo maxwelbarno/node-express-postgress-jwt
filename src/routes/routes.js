@@ -4,7 +4,7 @@ import {
   login,
   displayUsers,
   logout,
-  forgot
+  forgot, resetToken, resetPassword
 } from '../controllers/users';
 import { authMiddleware } from '../middleware/auth';
 
@@ -15,5 +15,7 @@ router.post('/auth/login', login);
 router.post('/auth/logout', authMiddleware, logout);
 router.get('/users', authMiddleware, displayUsers);
 router.post('/auth/forgot/:email', forgot);
+router.get('/auth/reset/:token', resetToken);
+router.post('/auth/reset/:token', resetPassword);
 
 export default router;
