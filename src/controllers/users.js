@@ -1,6 +1,11 @@
 import crypto from 'crypto';
 import {
-  create, find, read, updateTokens
+  create,
+  find,
+  read,
+  updateTokens,
+  searchToken,
+  updatePassword
 } from '../models/user';
 import db from '../utils/db';
 import {
@@ -52,13 +57,11 @@ const forgot = async (req, res) => {
     from: 'barxwells@gmail.com',
     subject: 'Password Reset',
     text:
-      `${'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n'
-      + 'Please click on the following link, or paste this into your browser to complete the process:\n\n'
-      + 'http://'}${
-        req.headers.host
-      }/reset/${
-        token
-      }\n\n`
+      `${
+        'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n'
+        + 'Please click on the following link, or paste this into your browser to complete the process:\n\n'
+        + 'http://'
+      }${req.headers.host}/auth/reset/${token}\n\n`
       + 'If you did not request this, please ignore this email and your password will remain unchanged.\n'
   };
   transporter.sendMail(options, (err) => {
@@ -69,6 +72,49 @@ const forgot = async (req, res) => {
   res.status(200).send({ message: 'success' });
 };
 
+const resetToken = async (req, res) => {
+  const { token } = req.params;
+  const { rows } = await db.query(searchToken(token));
+  const user = rows[0];
+  if (user) {
+    req.user = user;
+    res.status(200).send({ message: 'token retrieved successfully', token });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { rows } = await db.query(searchToken(token));
+  const now = new Date(Date.now() + 10800000).toGMTString();
+  const user = rows[0];
+  const exp = Date.parse(user.reset_password_token_expires) + 14400000;
+
+  if (!user) {
+    res.status(400).send({ message: 'Password reset token is invalid!' });
+  } else if (Date.parse(now) > exp) {
+    res.status(400).send({ message: 'Password reset token is expired!' });
+  } else {
+    user.password = req.body.password;
+    user.password_reset_token = '';
+    user.reset_password_token_expires = now;
+    await db.query(
+      updatePassword(
+        user.email,
+        encrypt(user.password),
+        user.password_reset_token,
+        user.reset_password_token_expires
+      )
+    );
+    res.status(200).send({ message: 'password updated successfully' });
+  }
+};
+
 export {
-  register, login, displayUsers, logout, forgot
+  register,
+  login,
+  displayUsers,
+  logout,
+  forgot,
+  resetToken,
+  resetPassword
 };
